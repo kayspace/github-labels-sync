@@ -1,0 +1,1410 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub Label Sync</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0e0e0e;
+        --surface: #161616;
+        --surface2: #1e1e1e;
+        --border: rgba(255, 255, 255, 0.08);
+        --border-hover: rgba(255, 255, 255, 0.16);
+        --text: #f0ede8;
+        --text-muted: #6b6862;
+        --text-dim: #3d3b38;
+        --accent: #e8e0d0;
+        --green: #4ade80;
+        --green-dim: rgba(74, 222, 128, 0.12);
+        --amber: #fbbf24;
+        --amber-dim: rgba(251, 191, 36, 0.1);
+        --red: #f87171;
+        --red-dim: rgba(248, 113, 113, 0.1);
+        --blue: #93c5fd;
+        --blue-dim: rgba(147, 197, 253, 0.1);
+        --mono: "Geist Mono", monospace;
+        --serif: "Instrument Serif", serif;
+      }
+
+      html {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* TOP NAV */
+      .nav {
+        border-bottom: 1px solid var(--border);
+        padding: 0 2rem;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        background: rgba(14, 14, 14, 0.92);
+        backdrop-filter: blur(8px);
+        z-index: 100;
+      }
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        color: var(--text);
+        text-decoration: none;
+      }
+      .nav-brand-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+        animation: pulse 2.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+      .nav-tag {
+        font-size: 11px;
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+        padding: 2px 8px;
+        border-radius: 4px;
+        letter-spacing: 0.05em;
+      }
+
+      /* LAYOUT */
+      .container {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 3rem 2rem 5rem;
+        width: 100%;
+      }
+
+      /* HERO */
+      .hero {
+        margin-bottom: 3rem;
+        animation: fadeUp 0.5s ease both;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .hero-title {
+        font-family: var(--serif);
+        font-size: clamp(2rem, 5vw, 3.2rem);
+        font-weight: 400;
+        line-height: 1.15;
+        color: var(--accent);
+        margin-bottom: 0.75rem;
+      }
+      .hero-title em {
+        font-style: italic;
+        color: var(--text-muted);
+      }
+      .hero-sub {
+        font-size: 13px;
+        color: var(--text-muted);
+        max-width: 520px;
+        line-height: 1.7;
+      }
+
+      /* INSTRUCTIONS STRIP */
+      .steps-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 2.5rem;
+        animation: fadeUp 0.5s 0.1s ease both;
+      }
+      .step {
+        background: var(--surface);
+        padding: 1rem 1.1rem;
+        transition: background 0.15s;
+      }
+      .step:hover {
+        background: var(--surface2);
+      }
+      .step-num {
+        font-size: 11px;
+        color: var(--text-dim);
+        letter-spacing: 0.08em;
+        margin-bottom: 4px;
+      }
+      .step-title {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+      .step-desc {
+        font-size: 11px;
+        color: var(--text-muted);
+        line-height: 1.5;
+      }
+
+      /* SECTION CARD */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        animation: fadeUp 0.5s ease both;
+      }
+      .card:nth-child(1) {
+        animation-delay: 0.15s;
+      }
+      .card:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .card:nth-child(3) {
+        animation-delay: 0.25s;
+      }
+      .card-header {
+        padding: 0.85rem 1.25rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card-header-icon {
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+      }
+      .card-header-icon svg {
+        width: 14px;
+        height: 14px;
+      }
+      .card-title {
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        text-transform: uppercase;
+      }
+      .card-hint {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--text-dim);
+      }
+      .card-body {
+        padding: 1.25rem;
+      }
+
+      /* FORM ELEMENTS */
+      .field {
+        margin-bottom: 1.1rem;
+      }
+      .field:last-child {
+        margin-bottom: 0;
+      }
+      .field-label {
+        display: block;
+        font-size: 11px;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      input[type="text"],
+      input[type="password"] {
+        width: 100%;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 13px;
+        padding: 9px 12px;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      input[type="text"]:focus,
+      input[type="password"]:focus {
+        border-color: var(--border-hover);
+      }
+      input[type="text"]::placeholder,
+      input[type="password"]::placeholder {
+        color: var(--text-dim);
+      }
+      .token-note {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 7px;
+        line-height: 1.6;
+      }
+      .token-note a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+      .token-note a:hover {
+        text-decoration: underline;
+      }
+
+      /* RADIO CONFLICT */
+      .radio-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .radio-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+      }
+      .radio-item:hover {
+        border-color: var(--border-hover);
+        background: var(--surface2);
+      }
+      .radio-item.selected {
+        border-color: rgba(255, 255, 255, 0.2);
+        background: var(--surface2);
+      }
+      .radio-item input {
+        display: none;
+      }
+      .radio-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 1.5px solid var(--border-hover);
+        margin-top: 1px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.15s;
+      }
+      .radio-item.selected .radio-dot {
+        border-color: var(--text);
+      }
+      .radio-dot::after {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--text);
+        display: none;
+      }
+      .radio-item.selected .radio-dot::after {
+        display: block;
+      }
+      .radio-text {
+        flex: 1;
+      }
+      .radio-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text);
+      }
+      .radio-desc {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 2px;
+        line-height: 1.5;
+      }
+
+      /* PREVIEW AREA */
+      .preview-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .preview-status {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+      .label-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        min-height: 30px;
+      }
+      .label-chip {
+        font-size: 11px;
+        padding: 2px 9px;
+        border-radius: 100px;
+        font-weight: 500;
+        font-family: var(--mono);
+        cursor: default;
+        transition: opacity 0.15s;
+      }
+      .label-chip:hover {
+        opacity: 0.8;
+      }
+      .empty-hint {
+        font-size: 12px;
+        color: var(--text-dim);
+        font-style: italic;
+      }
+
+      /* BUTTONS */
+      .btn-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 1.5rem;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #0e0e0e;
+        border: none;
+        border-radius: 6px;
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 9px 20px;
+        cursor: pointer;
+        transition:
+          opacity 0.15s,
+          transform 0.1s;
+        letter-spacing: 0.02em;
+      }
+      .btn-primary:hover {
+        opacity: 0.88;
+      }
+      .btn-primary:active {
+        transform: scale(0.98);
+      }
+      .btn-primary:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-family: var(--mono);
+        font-size: 12px;
+        padding: 8px 14px;
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          color 0.15s;
+      }
+      .btn-ghost:hover {
+        border-color: var(--border-hover);
+        color: var(--text);
+      }
+      .btn-ghost-sm {
+        background: transparent;
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 4px 10px;
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          color 0.15s;
+        letter-spacing: 0.03em;
+      }
+      .btn-ghost-sm:hover {
+        border-color: var(--border-hover);
+        color: var(--text);
+      }
+      .run-status {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      /* PROGRESS */
+      .progress-wrap {
+        margin-top: 1.25rem;
+        display: none;
+      }
+      .progress-wrap.visible {
+        display: block;
+      }
+      .progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+      }
+      .progress-track {
+        height: 2px;
+        background: var(--border);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--green);
+        width: 0%;
+        transition: width 0.25s ease;
+        border-radius: 2px;
+        box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
+      }
+
+      /* STATS */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-top: 1.25rem;
+        display: none;
+      }
+      .stats-grid.visible {
+        display: grid;
+      }
+      .stat-box {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+      }
+      .stat-num {
+        font-size: 24px;
+        font-weight: 500;
+        font-family: var(--serif);
+      }
+      .stat-lbl {
+        font-size: 10px;
+        color: var(--text-muted);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-top: 2px;
+      }
+
+      /* LOG */
+      .log-wrap {
+        margin-top: 1.25rem;
+        display: none;
+      }
+      .log-wrap.visible {
+        display: block;
+      }
+      .log-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+      }
+      .log-title {
+        font-size: 11px;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      .log-scroll {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1.7;
+        max-height: 240px;
+        overflow-y: auto;
+      }
+      .log-scroll::-webkit-scrollbar {
+        width: 4px;
+      }
+      .log-scroll::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .log-scroll::-webkit-scrollbar-thumb {
+        background: var(--border-hover);
+        border-radius: 2px;
+      }
+      .log-line {
+        display: flex;
+        gap: 10px;
+      }
+      .log-ts {
+        color: var(--text-dim);
+        flex-shrink: 0;
+      }
+      .log-tag {
+        width: 60px;
+        flex-shrink: 0;
+        text-align: right;
+      }
+      .log-tag.ok {
+        color: var(--green);
+      }
+      .log-tag.skip {
+        color: var(--text-muted);
+      }
+      .log-tag.overwrite {
+        color: var(--amber);
+      }
+      .log-tag.error {
+        color: var(--red);
+      }
+      .log-tag.info {
+        color: var(--blue);
+      }
+      .log-msg {
+        color: var(--text);
+      }
+
+      /* TOKEN VISIBILITY */
+      .input-wrap {
+        position: relative;
+      }
+      .toggle-vis {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: var(--text-dim);
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        user-select: none;
+        transition: color 0.15s;
+      }
+      .toggle-vis:hover {
+        color: var(--text-muted);
+      }
+
+      /* SECURITY NOTICE */
+      .security-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: var(--green);
+        background: var(--green-dim);
+        border: 1px solid rgba(74, 222, 128, 0.2);
+        padding: 3px 10px;
+        border-radius: 100px;
+        margin-bottom: 10px;
+      }
+      .security-badge svg {
+        width: 10px;
+        height: 10px;
+      }
+
+      /* SECTION DIVIDER */
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 2rem 0;
+      }
+
+      /* DOCS SECTION */
+      .docs-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 1.5rem;
+      }
+      .doc-block {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem;
+        background: var(--surface);
+      }
+      .doc-block-title {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .doc-block ul {
+        list-style: none;
+        padding: 0;
+      }
+      .doc-block li {
+        font-size: 11px;
+        color: var(--text-muted);
+        padding: 3px 0;
+        padding-left: 14px;
+        position: relative;
+        line-height: 1.6;
+      }
+      .doc-block li::before {
+        content: "—";
+        position: absolute;
+        left: 0;
+        color: var(--text-dim);
+      }
+
+      /* FOOTER */
+      .footer {
+        margin-top: auto;
+        border-top: 1px solid var(--border);
+        padding: 1rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--text-dim);
+      }
+      .footer a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      .footer a:hover {
+        color: var(--text-muted);
+      }
+
+      .footer-link {
+        position: relative;
+        font-weight: 700;
+        text-decoration: none;
+        color: var(--accent);
+        transition: opacity 0.15s ease;
+      }
+
+      .footer-link::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -2px;
+        width: 0%;
+        height: 1px;
+        background: var(--accent);
+        transition: width 0.25s ease;
+      }
+
+      .footer-link:hover::after {
+        width: 100%;
+      }
+
+      .footer-link:hover {
+        opacity: 0.85;
+      }
+
+      @media (max-width: 600px) {
+        .steps-strip {
+          grid-template-columns: 1fr 1fr;
+        }
+        .field-row {
+          grid-template-columns: 1fr;
+        }
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .docs-grid {
+          grid-template-columns: 1fr;
+        }
+        .nav {
+          padding: 0 1rem;
+        }
+        .container {
+          padding: 2rem 1rem 4rem;
+        }
+        .hero-title {
+          font-size: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <a class="nav-brand" href="#">
+        <div class="nav-brand-dot"></div>
+        github — label sync
+      </a>
+      <span class="nav-tag" id="app-version">loading...</span>
+    </nav>
+
+    <div class="container">
+      <!-- HERO -->
+      <div class="hero">
+        <h1 class="hero-title">
+          Copy labels<br /><em>across repositories.</em>
+        </h1>
+        <p class="hero-sub">
+          Sync issue labels from one GitHub repo to another in seconds. No CLI,
+          no setup, just paste and run.
+        </p>
+      </div>
+
+      <!-- STEPS STRIP -->
+      <div class="steps-strip">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div class="step-title">Get a token</div>
+          <div class="step-desc">
+            Generate a GitHub PAT with <code>repo</code> scope. Classic or
+            fine-grained both work.
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div class="step-title">Set repos</div>
+          <div class="step-desc">
+            Enter source and target as <code>owner/repo</code>. Preview labels
+            before syncing.
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div class="step-title">Pick strategy</div>
+          <div class="step-desc">
+            Choose to skip or overwrite labels that already exist in the target
+            repo.
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">04</div>
+          <div class="step-title">Run sync</div>
+          <div class="step-desc">
+            Watch the live log. Review results. Your token never leaves the
+            browser.
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 1: AUTH -->
+      <div class="card" style="animation-delay: 0.1s">
+        <div class="card-header">
+          <div class="card-header-icon">
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <rect x="3" y="7" width="10" height="8" rx="1.5" />
+              <path d="M5 7V5a3 3 0 0 1 6 0v2" />
+            </svg>
+          </div>
+          <span class="card-title">Authentication</span>
+        </div>
+        <div class="card-body">
+          <div class="security-badge">
+            <svg viewBox="0 0 12 12" fill="currentColor">
+              <path
+                d="M6 1L2 3v3c0 2.5 1.7 4.7 4 5.4C8.3 10.7 10 8.5 10 6V3L6 1zm0 1.6l3 1.4v3c0 1.8-1.3 3.4-3 3.9-1.7-.5-3-2.1-3-3.9V4l3-1.4z"
+              />
+            </svg>
+            Token stays in your browser only
+          </div>
+          <div class="field">
+            <label class="field-label" for="pat">Personal Access Token</label>
+            <div class="input-wrap">
+              <input
+                type="password"
+                id="pat"
+                placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                autocomplete="off"
+              />
+              <span
+                class="toggle-vis"
+                onclick="toggleToken()"
+                id="token-vis-btn"
+                >show</span
+              >
+            </div>
+            <p class="token-note">
+              Requires <code>repo</code> scope (classic PAT) or
+              <em>Issues: read+write</em> on both repos (fine-grained). &nbsp;<a
+                href="https://github.com/settings/tokens/new"
+                target="_blank"
+                >Generate token &rarr;</a
+              >
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: REPOS -->
+      <div class="card" style="animation-delay: 0.15s">
+        <div class="card-header">
+          <div class="card-header-icon">
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                d="M5 2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V5l-3-3H5z"
+              />
+              <path d="M9 2v3h3" />
+            </svg>
+          </div>
+          <span class="card-title">Repositories</span>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <div class="field-row">
+              <div>
+                <label class="field-label" for="src">Source repo</label>
+                <input type="text" id="src" placeholder="owner/repository" />
+              </div>
+              <div>
+                <label class="field-label" for="dst">Target repo</label>
+                <input type="text" id="dst" placeholder="owner/repository" />
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <div class="preview-bar">
+              <button class="btn-ghost-sm" onclick="previewLabels()">
+                preview source labels
+              </button>
+              <span class="preview-status" id="preview-status"></span>
+            </div>
+            <div class="label-chips" id="label-chips">
+              <span class="empty-hint"
+                >labels will appear here after preview</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: STRATEGY -->
+      <div class="card" style="animation-delay: 0.2s">
+        <div class="card-header">
+          <div class="card-header-icon">
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path d="M2 4h12M4 8h8M6 12h4" />
+            </svg>
+          </div>
+          <span class="card-title">Conflict Strategy</span>
+          <span class="card-hint">what to do with existing labels</span>
+        </div>
+        <div class="card-body">
+          <div class="radio-group">
+            <label
+              class="radio-item selected"
+              id="ri-skip"
+              onclick="selectConflict('skip', this)"
+            >
+              <input type="radio" name="conflict" value="skip" checked />
+              <div class="radio-dot"></div>
+              <div class="radio-text">
+                <div class="radio-label">Skip existing</div>
+                <div class="radio-desc">
+                  If a label with the same name already exists in the target,
+                  leave it untouched. Safe and non-destructive.
+                </div>
+              </div>
+            </label>
+            <label
+              class="radio-item"
+              id="ri-overwrite"
+              onclick="selectConflict('overwrite', this)"
+            >
+              <input type="radio" name="conflict" value="overwrite" />
+              <div class="radio-dot"></div>
+              <div class="radio-text">
+                <div class="radio-label">Overwrite existing</div>
+                <div class="radio-desc">
+                  Update the color and description of any label that already
+                  exists. Useful for keeping repos in sync.
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- RUN CONTROLS -->
+      <div class="btn-row">
+        <button class="btn-primary" id="btn-run" onclick="runSync()">
+          Run sync
+        </button>
+        <button class="btn-ghost" onclick="resetAll()">Reset</button>
+        <span class="run-status" id="run-status"></span>
+      </div>
+
+      <!-- PROGRESS -->
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-label">
+          <span id="progress-label-txt">Syncing labels...</span>
+          <span id="progress-pct">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-box">
+          <div class="stat-num" id="s-created" style="color: var(--green)">
+            0
+          </div>
+          <div class="stat-lbl">Created</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="s-skipped" style="color: var(--text-muted)">
+            0
+          </div>
+          <div class="stat-lbl">Skipped</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="s-overwritten" style="color: var(--amber)">
+            0
+          </div>
+          <div class="stat-lbl">Overwritten</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="s-errors" style="color: var(--red)">0</div>
+          <div class="stat-lbl">Errors</div>
+        </div>
+      </div>
+
+      <!-- LOG -->
+      <div class="log-wrap" id="log-wrap">
+        <div class="log-header">
+          <span class="log-title">Activity log</span>
+          <button class="btn-ghost-sm" onclick="clearLog()">clear</button>
+        </div>
+        <div class="log-scroll" id="log-scroll"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- DOCS -->
+      <div>
+        <p
+          style="
+            font-size: 12px;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+          "
+        >
+          Reference
+        </p>
+        <div class="docs-grid">
+          <div class="doc-block">
+            <div class="doc-block-title">Token permissions required</div>
+            <ul>
+              <li>Classic PAT: <code>repo</code> scope</li>
+              <li>Fine-grained: Issues (read+write) on target</li>
+              <li>Fine-grained: Contents (read) on source</li>
+              <li>Revoke token after use if one-time</li>
+            </ul>
+          </div>
+          <div class="doc-block">
+            <div class="doc-block-title">Rate limits</div>
+            <ul>
+              <li>5,000 requests/hour with auth</li>
+              <li>100 labels fetched per page (auto-paginated)</li>
+              <li>80ms delay between writes</li>
+              <li>Repos with 1,000+ labels still fine</li>
+            </ul>
+          </div>
+          <div class="doc-block">
+            <div class="doc-block-title">Conflict handling</div>
+            <ul>
+              <li>Name matching is case-insensitive</li>
+              <li>Skip: leaves color and description as-is</li>
+              <li>Overwrite: patches both color and description</li>
+              <li>Duplicate names within a repo are blocked by GitHub</li>
+            </ul>
+          </div>
+          <div class="doc-block">
+            <div class="doc-block-title">What gets copied</div>
+            <ul>
+              <li>Label name (exact, preserving case)</li>
+              <li>Hex color (without the # prefix)</li>
+              <li>Description (empty if none set)</li>
+              <li>Not copied: issue associations</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <span>
+        &mdash; browser-only, no backend &mdash; open source &mdash; by
+        <a
+          href="https://kayspace.vercel.app"
+          target="_blank"
+          class="footer-link"
+        >
+          kayspace
+        </a>
+      </span>
+
+      <span>
+        <a
+          href="https://github.com/kayspace/github-labels-sync"
+          target="_blank"
+          class="footer-link"
+        >
+          spare a star ★
+        </a>
+      </span>
+    </footer>
+
+    <script>
+      function toggleToken() {
+        const inp = document.getElementById("pat");
+        const btn = document.getElementById("token-vis-btn");
+        if (inp.type === "password") {
+          inp.type = "text";
+          btn.textContent = "hide";
+        } else {
+          inp.type = "password";
+          btn.textContent = "show";
+        }
+      }
+
+      function selectConflict(val, el) {
+        document
+          .querySelectorAll(".radio-item")
+          .forEach((r) => r.classList.remove("selected"));
+        el.classList.add("selected");
+      }
+
+      function getToken() {
+        return document.getElementById("pat").value.trim();
+      }
+      function getSrc() {
+        return document.getElementById("src").value.trim();
+      }
+      function getDst() {
+        return document.getElementById("dst").value.trim();
+      }
+      function getConflict() {
+        return document.querySelector("input[name=conflict]:checked").value;
+      }
+
+      function timestamp() {
+        const d = new Date();
+        return d.toTimeString().slice(0, 8);
+      }
+
+      function addLog(msg, type = "info") {
+        const wrap = document.getElementById("log-wrap");
+        const scroll = document.getElementById("log-scroll");
+        wrap.classList.add("visible");
+        const line = document.createElement("div");
+        line.className = "log-line";
+        line.innerHTML = `<span class="log-ts">${timestamp()}</span><span class="log-tag ${type}">${type}</span><span class="log-msg">${msg}</span>`;
+        scroll.appendChild(line);
+        scroll.scrollTop = scroll.scrollHeight;
+      }
+
+      function clearLog() {
+        document.getElementById("log-scroll").innerHTML = "";
+        document.getElementById("log-wrap").classList.remove("visible");
+      }
+
+      function setProgress(pct, label) {
+        document.getElementById("progress-fill").style.width = pct + "%";
+        document.getElementById("progress-pct").textContent =
+          Math.round(pct) + "%";
+        if (label)
+          document.getElementById("progress-label-txt").textContent = label;
+      }
+
+      function relativeLuminance(hex) {
+        const r = parseInt(hex.slice(0, 2), 16) / 255,
+          g = parseInt(hex.slice(2, 4), 16) / 255,
+          b = parseInt(hex.slice(4, 6), 16) / 255;
+        const lin = (v) =>
+          v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+      }
+      function chipTextColor(hex) {
+        return relativeLuminance(hex) > 0.35 ? "#111" : "#f5f5f5";
+      }
+
+      async function fetchAllLabels(repo, token) {
+        let labels = [],
+          page = 1;
+        while (true) {
+          const r = await fetch(
+            `https://api.github.com/repos/${repo}/labels?per_page=100&page=${page}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+              },
+            },
+          );
+          if (!r.ok) {
+            const err = await r.json().catch(() => ({}));
+            throw new Error(`${r.status}: ${err.message || r.statusText}`);
+          }
+          const data = await r.json();
+          labels = labels.concat(data);
+          if (data.length < 100) break;
+          page++;
+        }
+        return labels;
+      }
+
+      async function previewLabels() {
+        const token = getToken(),
+          src = getSrc();
+        const chips = document.getElementById("label-chips");
+        const status = document.getElementById("preview-status");
+        if (!token) {
+          status.textContent = "enter token first";
+          return;
+        }
+        if (!src || !src.includes("/")) {
+          status.textContent = "enter owner/repo";
+          return;
+        }
+        status.textContent = "fetching...";
+        chips.innerHTML = "";
+        try {
+          const labels = await fetchAllLabels(src, token);
+          status.textContent = `${labels.length} label${labels.length !== 1 ? "s" : ""} found`;
+          if (!labels.length) {
+            chips.innerHTML =
+              '<span class="empty-hint">no labels in source repo</span>';
+            return;
+          }
+          labels.forEach((l) => {
+            const bg = "#" + l.color;
+            const chip = document.createElement("span");
+            chip.className = "label-chip";
+            chip.style.background = bg;
+            chip.style.color = chipTextColor(l.color);
+            chip.title = l.description || l.name;
+            chip.textContent = l.name;
+            chips.appendChild(chip);
+          });
+        } catch (e) {
+          status.textContent = "error: " + e.message;
+        }
+      }
+
+      async function runSync() {
+        const token = getToken(),
+          src = getSrc(),
+          dst = getDst(),
+          conflict = getConflict();
+        const runStatus = document.getElementById("run-status");
+
+        if (!token) {
+          runStatus.textContent = "token required";
+          return;
+        }
+        if (!src || !src.includes("/")) {
+          runStatus.textContent = "invalid source (use owner/repo)";
+          return;
+        }
+        if (!dst || !dst.includes("/")) {
+          runStatus.textContent = "invalid target (use owner/repo)";
+          return;
+        }
+        if (src === dst) {
+          runStatus.textContent = "source and target must differ";
+          return;
+        }
+
+        document.getElementById("log-scroll").innerHTML = "";
+        document.getElementById("log-wrap").classList.remove("visible");
+        document.getElementById("stats-grid").classList.remove("visible");
+        document.getElementById("progress-wrap").classList.add("visible");
+        document.getElementById("btn-run").disabled = true;
+        runStatus.textContent = "running...";
+        setProgress(0, "Fetching source labels...");
+
+        let created = 0,
+          skipped = 0,
+          overwritten = 0,
+          errors = 0;
+
+        try {
+          addLog(`Fetching labels from ${src}`, "info");
+          const srcLabels = await fetchAllLabels(src, token);
+          addLog(`Found ${srcLabels.length} label(s) in source`, "info");
+
+          setProgress(5, "Fetching target labels...");
+          addLog(`Fetching existing labels from ${dst}`, "info");
+          const dstLabels = await fetchAllLabels(dst, token);
+          const dstMap = new Map(
+            dstLabels.map((l) => [l.name.toLowerCase(), l]),
+          );
+          addLog(`Target has ${dstLabels.length} existing label(s)`, "info");
+
+          const total = srcLabels.length;
+          for (let i = 0; i < total; i++) {
+            const l = srcLabels[i];
+            const pct = 5 + Math.round(((i + 1) / total) * 95);
+            setProgress(pct, `Processing ${i + 1} of ${total}`);
+
+            const exists = dstMap.has(l.name.toLowerCase());
+            if (exists && conflict === "skip") {
+              addLog(`${l.name}`, "skip");
+              skipped++;
+              continue;
+            }
+            const body = JSON.stringify({
+              name: l.name,
+              color: l.color,
+              description: l.description || "",
+            });
+            try {
+              if (exists && conflict === "overwrite") {
+                const existing = dstMap.get(l.name.toLowerCase());
+                const r = await fetch(
+                  `https://api.github.com/repos/${dst}/labels/${encodeURIComponent(existing.name)}`,
+                  {
+                    method: "PATCH",
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                      Accept: "application/vnd.github+json",
+                      "Content-Type": "application/json",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                    },
+                    body,
+                  },
+                );
+                if (!r.ok)
+                  throw new Error(
+                    (await r.json().catch(() => ({}))).message || r.statusText,
+                  );
+                addLog(`${l.name}`, "overwrite");
+                overwritten++;
+              } else {
+                const r = await fetch(
+                  `https://api.github.com/repos/${dst}/labels`,
+                  {
+                    method: "POST",
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                      Accept: "application/vnd.github+json",
+                      "Content-Type": "application/json",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                    },
+                    body,
+                  },
+                );
+                if (!r.ok)
+                  throw new Error(
+                    (await r.json().catch(() => ({}))).message || r.statusText,
+                  );
+                addLog(`${l.name}`, "ok");
+                created++;
+              }
+            } catch (e) {
+              addLog(`${l.name}: ${e.message}`, "error");
+              errors++;
+            }
+            await new Promise((r) => setTimeout(r, 80));
+          }
+        } catch (e) {
+          addLog(`Fatal error: ${e.message}`, "error");
+        }
+
+        document.getElementById("s-created").textContent = created;
+        document.getElementById("s-skipped").textContent = skipped;
+        document.getElementById("s-overwritten").textContent = overwritten;
+        document.getElementById("s-errors").textContent = errors;
+        document.getElementById("stats-grid").classList.add("visible");
+        document.getElementById("btn-run").disabled = false;
+        setProgress(100, "Complete");
+        runStatus.textContent = `done — ${created} created, ${skipped} skipped, ${overwritten} updated, ${errors} errors`;
+      }
+
+      function resetAll() {
+        ["pat", "src", "dst"].forEach(
+          (id) => (document.getElementById(id).value = ""),
+        );
+        document.getElementById("pat").type = "password";
+        document.getElementById("token-vis-btn").textContent = "show";
+        document.getElementById("label-chips").innerHTML =
+          '<span class="empty-hint">labels will appear here after preview</span>';
+        document.getElementById("preview-status").textContent = "";
+        document.getElementById("run-status").textContent = "";
+        document.getElementById("log-scroll").innerHTML = "";
+        document.getElementById("log-wrap").classList.remove("visible");
+        document.getElementById("stats-grid").classList.remove("visible");
+        document.getElementById("progress-wrap").classList.remove("visible");
+        document.getElementById("c-skip").checked = true;
+        selectConflict("skip", document.getElementById("ri-skip"));
+        document.getElementById("progress-fill").style.width = "0%";
+      }
+
+      async function loadVersion() {
+        try {
+          const r = await fetch(
+            "https://api.github.com/repos/kayspace/github-labels-sync/releases/latest",
+          );
+
+          if (!r.ok) throw new Error("Failed");
+
+          const data = await r.json();
+
+          document.getElementById("app-version").textContent =
+            data.tag_name || "dev";
+        } catch {
+          document.getElementById("app-version").textContent = "dev";
+        }
+      }
+
+      loadVersion();
+    </script>
+  </body>
+</html>
