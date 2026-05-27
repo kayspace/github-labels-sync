@@ -68,6 +68,11 @@
         backdrop-filter: blur(8px);
         z-index: 100;
       }
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
       .nav-brand {
         display: flex;
         align-items: center;
@@ -102,6 +107,37 @@
         padding: 2px 8px;
         border-radius: 4px;
         letter-spacing: 0.05em;
+      }
+
+      .star-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--accent);
+        color: var(--bg);
+        border: none;
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 4px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        cursor: pointer;
+        text-decoration: none;
+        transition:
+          background 0.18s,
+          transform 0.1s;
+        font-weight: bold;
+      }
+      .star-btn:hover {
+        background: var(--text-muted);
+      }
+      .star-btn:active {
+        transform: scale(0.97);
+      }
+      .star-icon {
+        font-size: 12px;
+        line-height: 1;
       }
 
       /* LAYOUT */
@@ -150,7 +186,6 @@
         font-style: italic;
         text-decoration-line: underline;
         text-decoration-style: dotted;
-        
       }
 
       /* INSTRUCTIONS STRIP */
@@ -770,7 +805,16 @@
         <div class="nav-brand-dot"></div>
         github — label sync
       </a>
-      <span class="nav-tag" id="app-version">loading...</span>
+      <div class="nav-right">
+        <span class="nav-tag" id="app-version">loading...</span>
+        <a
+          href="https://github.com/kayspace/github-labels-sync"
+          target="_blank"
+          class="star-btn"
+        >
+          <span class="star-icon">☆</span> star on github
+        </a>
+      </div>
     </nav>
 
     <div class="container">
@@ -781,7 +825,11 @@
         </h1>
         <p class="hero-sub">
           Sync issue labels from one GitHub repo to another in seconds. No CLI,
-          no setup, just paste and run. <span class="refresh-indicator">as of now refresh twice to reflect the changes in ur target repo labels section</span>
+          no setup, just paste and run.
+          <span class="refresh-indicator"
+            >as of now refresh twice to reflect the changes in ur target repo
+            labels section</span
+          >
         </p>
       </div>
 
@@ -1096,14 +1144,8 @@
         </a>
       </span>
 
-      <span>
-        <a
-          href="https://github.com/kayspace/github-labels-sync"
-          target="_blank"
-          class="footer-link"
-        >
-          spare a star ★
-        </a>
+      <span class="footer-link">
+        thank u for using!
       </span>
     </footer>
 
