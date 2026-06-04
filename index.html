@@ -1186,8 +1186,142 @@
         <span class="run-status" id="run-status"></span>
       </div>
 
+      <div class="divider"></div>
+
+      <!-- CARD 4: CLEANUP MODE -->
+      <div class="card" style="animation-delay: 0.25s">
+        <div class="card-header">
+          <div class="card-header-icon">
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                d="M3 4h10M6 4V2h4v2M5 8v5a1 1 0 001 1h4a1 1 0 001-1V8M7 8v3M9 8v3"
+              />
+            </svg>
+          </div>
+          <span class="card-title">Cleanup Labels</span>
+          <span class="card-hint">remove labels from target repos</span>
+        </div>
+        <div class="card-body">
+          <!-- CLEANUP TARGETS -->
+          <div class="field">
+            <div style="display: flex; align-items: center; margin-bottom: 8px">
+              <label class="field-label" style="margin-bottom: 0">
+                Target repos to clean
+              </label>
+              <span class="target-count-badge" id="cleanup-target-count-badge"
+                >1 target</span
+              >
+            </div>
+            <div class="target-list" id="cleanup-target-list"></div>
+            <button class="btn-add-target" onclick="addCleanupTarget()">
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 12 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path d="M6 1v10M1 6h10" />
+              </svg>
+              add another target
+            </button>
+          </div>
+
+          <!-- CLEANUP MODE SELECTION -->
+          <div class="field" style="margin-top: 1.25rem">
+            <label class="field-label">Removal mode</label>
+            <div class="radio-group">
+              <label
+                class="radio-item selected"
+                id="ri-remove-all"
+                onclick="selectCleanupMode('remove-all', this)"
+              >
+                <input
+                  type="radio"
+                  name="cleanup-mode"
+                  value="remove-all"
+                  checked
+                />
+                <div class="radio-dot"></div>
+                <div class="radio-text">
+                  <div class="radio-label">Remove all labels</div>
+                  <div class="radio-desc">
+                    Delete every label from target repos. Use with caution.
+                  </div>
+                </div>
+              </label>
+              <label
+                class="radio-item"
+                id="ri-keep-defaults"
+                onclick="selectCleanupMode('keep-defaults', this)"
+              >
+                <input type="radio" name="cleanup-mode" value="keep-defaults" />
+                <div class="radio-dot"></div>
+                <div class="radio-text">
+                  <div class="radio-label">Keep defaults only</div>
+                  <div class="radio-desc">
+                    Remove all labels except: bug, feature, documentation,
+                    enhancement, good first issue...
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLEANUP CONTROLS -->
+      <div class="btn-row">
+        <button
+          class="btn-primary"
+          id="btn-cleanup"
+          onclick="runCleanup()"
+          style="background: var(--red)"
+        >
+          Start cleanup
+        </button>
+        <button class="btn-ghost" onclick="resetCleanup()">
+          Reset cleanup
+        </button>
+        <span class="run-status" id="cleanup-status"></span>
+      </div>
+
+      <!-- CLEANUP PROGRESS -->
+      <div class="progress-wrap" id="cleanup-progress-wrap">
+        <div class="progress-label">
+          <span id="cleanup-progress-label-txt">Removing labels...</span>
+          <span id="cleanup-progress-pct">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="cleanup-progress-fill"></div>
+        </div>
+        <div class="repo-progress-list" id="cleanup-repo-progress-list"></div>
+      </div>
+
+      <!-- CLEANUP STATS -->
+      <div class="stats-grid" id="cleanup-stats-grid">
+        <div class="stat-box">
+          <div class="stat-num" id="c-removed" style="color: var(--red)">0</div>
+          <div class="stat-lbl">Removed</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="c-kept" style="color: var(--green)">0</div>
+          <div class="stat-lbl">Kept</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="c-errors" style="color: var(--red)">0</div>
+          <div class="stat-lbl">Errors</div>
+        </div>
+      </div>
+
       <!-- PROGRESS -->
-      <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-wrap" id="progress-wrap" style="margin-top: 1.25rem">
         <div class="progress-label">
           <span id="progress-label-txt">Syncing labels...</span>
           <span id="progress-pct">0%</span>
@@ -1199,7 +1333,7 @@
       </div>
 
       <!-- STATS -->
-      <div class="stats-grid" id="stats-grid">
+      <div class="stats-grid" id="stats-grid" style="margin-top: 1.25rem">
         <div class="stat-box">
           <div class="stat-num" id="s-created" style="color: var(--green)">
             0
@@ -1225,7 +1359,7 @@
       </div>
 
       <!-- LOG -->
-      <div class="log-wrap" id="log-wrap">
+      <div class="log-wrap" id="log-wrap" style="margin-top: 1.25rem">
         <div class="log-header">
           <span class="log-title">Activity log</span>
           <button class="btn-ghost-sm" onclick="clearLog()">clear</button>
@@ -1233,6 +1367,7 @@
         <div class="log-scroll" id="log-scroll"></div>
       </div>
 
+      <div class="divider"></div>
       <div class="divider"></div>
 
       <!-- DOCS -->
@@ -1356,6 +1491,87 @@
 
       // Initialize with one target row
       addTarget();
+
+      // ---- CLEANUP TARGET MANAGEMENT ----
+      let cleanupTargetCount = 0;
+
+      function addCleanupTarget(value = "") {
+        cleanupTargetCount++;
+        const list = document.getElementById("cleanup-target-list");
+        const idx = list.children.length + 1;
+        const row = document.createElement("div");
+        row.className = "target-row";
+        row.dataset.id = cleanupTargetCount;
+        row.innerHTML = `
+          <span class="target-index">${String(idx).padStart(2, "0")}</span>
+          <input type="text" placeholder="owner/repository" value="${value}" />
+          <button class="btn-remove-target" onclick="removeCleanupTarget(this)" title="Remove">&times;</button>
+        `;
+        list.appendChild(row);
+        updateCleanupTargetCount();
+        row.querySelector("input").focus();
+      }
+
+      function removeCleanupTarget(btn) {
+        const row = btn.closest(".target-row");
+        row.remove();
+        renumberCleanupTargets();
+        updateCleanupTargetCount();
+      }
+
+      function renumberCleanupTargets() {
+        const rows = document.querySelectorAll(
+          "#cleanup-target-list .target-row",
+        );
+        rows.forEach((r, i) => {
+          r.querySelector(".target-index").textContent = String(i + 1).padStart(
+            2,
+            "0",
+          );
+        });
+      }
+
+      function updateCleanupTargetCount() {
+        const n = document.querySelectorAll(
+          "#cleanup-target-list .target-row",
+        ).length;
+        const badge = document.getElementById("cleanup-target-count-badge");
+        badge.textContent = n === 1 ? "1 target" : `${n} targets`;
+      }
+
+      function getCleanupTargets() {
+        return Array.from(
+          document.querySelectorAll("#cleanup-target-list .target-row input"),
+        )
+          .map((i) => i.value.trim())
+          .filter((v) => v.length > 0);
+      }
+
+      // Initialize cleanup with one target row
+      addCleanupTarget();
+
+      function selectCleanupMode(val, el) {
+        document
+          .querySelectorAll("#ri-remove-all, #ri-keep-defaults")
+          .forEach((r) => r.classList.remove("selected"));
+        el.classList.add("selected");
+      }
+
+      function getCleanupMode() {
+        return document.querySelector("input[name=cleanup-mode]:checked").value;
+      }
+
+      const DEFAULT_LABELS = [
+        "bug",
+        "documentation",
+        "duplicate",
+        "enhancement",
+        "good first issue",
+        "help wanted",
+        "invalid",
+        "question",
+        "wontfix",
+      ];
 
       // ---- LOCALSTORAGE (PAT PERSISTENCE) ----
       const PAT_STORAGE_KEY = "github-labels-sync-pat";
@@ -1745,6 +1961,183 @@
         document.getElementById("btn-run").disabled = false;
         setOverallProgress(100, "Complete");
         runStatus.textContent = `done across ${targets.length} repo${targets.length > 1 ? "s" : ""} - ${totals.created} created, ${totals.skipped} skipped, ${totals.overwritten} updated, ${totals.errors} errors`;
+      }
+
+      // ---- CLEANUP FUNCTIONS ----
+      async function deleteLabel(repo, labelName, token) {
+        const r = await fetch(
+          `https://api.github.com/repos/${repo}/labels/${encodeURIComponent(labelName)}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+            },
+          },
+        );
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          throw new Error(err.message || r.statusText);
+        }
+      }
+
+      async function cleanupRepo(repo, token, mode, repoEl) {
+        const fillEl = repoEl.querySelector(".repo-mini-fill");
+        const stateEl = repoEl.querySelector(".repo-progress-state");
+        const setRepoProgress = (pct) => {
+          fillEl.style.width = pct + "%";
+        };
+
+        stateEl.textContent = "fetching labels...";
+        addLog(`Fetching labels from ${repo}`, "info", repo);
+
+        let labels;
+        try {
+          labels = await fetchAllLabels(repo, token);
+        } catch (e) {
+          stateEl.textContent = `fetch failed: ${e.message}`;
+          stateEl.className = "repo-progress-state error";
+          addLog(`Failed to fetch: ${e.message}`, "error", repo);
+          return { removed: 0, kept: 0, errors: 0 };
+        }
+
+        let removed = 0,
+          kept = 0,
+          errors = 0;
+        const total = labels.length;
+
+        stateEl.textContent = "removing labels...";
+
+        for (let i = 0; i < total; i++) {
+          const label = labels[i];
+          setRepoProgress(Math.round(((i + 1) / total) * 100));
+
+          const shouldKeep =
+            mode === "keep-defaults" &&
+            DEFAULT_LABELS.includes(label.name.toLowerCase());
+
+          if (shouldKeep) {
+            addLog(`${label.name} (kept)`, "skip", repo);
+            kept++;
+            continue;
+          }
+
+          try {
+            await deleteLabel(repo, label.name, token);
+            addLog(`${label.name}`, "ok", repo);
+            removed++;
+          } catch (e) {
+            addLog(`${label.name}: ${e.message}`, "error", repo);
+            errors++;
+          }
+          await new Promise((r) => setTimeout(r, 80));
+        }
+
+        setRepoProgress(100);
+        stateEl.textContent = `done - ${removed} removed, ${kept} kept, ${errors} errors`;
+        stateEl.className = "repo-progress-state done";
+        return { removed, kept, errors };
+      }
+
+      async function runCleanup() {
+        const token = getToken();
+        const targets = getCleanupTargets();
+        const mode = getCleanupMode();
+        const cleanupStatus = document.getElementById("cleanup-status");
+
+        if (!token) {
+          cleanupStatus.textContent = "token required";
+          return;
+        }
+        if (targets.length === 0) {
+          cleanupStatus.textContent = "add at least one target repo";
+          return;
+        }
+
+        const invalidTarget = targets.find((t) => !t.includes("/"));
+        if (invalidTarget) {
+          cleanupStatus.textContent = `invalid target: ${invalidTarget}`;
+          return;
+        }
+
+        // Reset UI
+        document
+          .getElementById("cleanup-progress-wrap")
+          .classList.add("visible");
+        document
+          .getElementById("cleanup-stats-grid")
+          .classList.remove("visible");
+        document.getElementById("btn-cleanup").disabled = true;
+        cleanupStatus.textContent = "running...";
+
+        // Build per-repo progress items
+        const repoProgressList = document.getElementById(
+          "cleanup-repo-progress-list",
+        );
+        repoProgressList.innerHTML = "";
+        const repoEls = {};
+        targets.forEach((repo) => {
+          const el = document.createElement("div");
+          el.className = "repo-progress-item";
+          el.innerHTML = `
+            <div class="repo-progress-header">
+              <span class="repo-progress-name">${repo}</span>
+              <span class="repo-progress-state">waiting...</span>
+            </div>
+            <div class="repo-mini-track"><div class="repo-mini-fill"></div></div>
+          `;
+          repoProgressList.appendChild(el);
+          repoEls[repo] = el;
+        });
+
+        document.getElementById("cleanup-progress-fill").style.width = "0%";
+        document.getElementById("cleanup-progress-pct").textContent = "0%";
+
+        // Run all targets in parallel
+        const results = await Promise.all(
+          targets.map((repo) => cleanupRepo(repo, token, mode, repoEls[repo])),
+        );
+
+        const totals = results.reduce(
+          (acc, r) => ({
+            removed: acc.removed + r.removed,
+            kept: acc.kept + r.kept,
+            errors: acc.errors + r.errors,
+          }),
+          { removed: 0, kept: 0, errors: 0 },
+        );
+
+        document.getElementById("c-removed").textContent = totals.removed;
+        document.getElementById("c-kept").textContent = totals.kept;
+        document.getElementById("c-errors").textContent = totals.errors;
+        document.getElementById("cleanup-stats-grid").classList.add("visible");
+        document.getElementById("btn-cleanup").disabled = false;
+        document.getElementById("cleanup-progress-fill").style.width = "100%";
+        document.getElementById("cleanup-progress-pct").textContent = "100%";
+        cleanupStatus.textContent = `cleanup complete - ${totals.removed} removed, ${totals.kept} kept, ${totals.errors} errors`;
+      }
+
+      function resetCleanup() {
+        document.getElementById("cleanup-target-list").innerHTML = "";
+        cleanupTargetCount = 0;
+        addCleanupTarget();
+        document
+          .getElementById("cleanup-progress-wrap")
+          .classList.remove("visible");
+        document
+          .getElementById("cleanup-stats-grid")
+          .classList.remove("visible");
+        document.getElementById("cleanup-progress-fill").style.width = "0%";
+        document.getElementById("cleanup-repo-progress-list").innerHTML = "";
+        document.getElementById("cleanup-status").textContent = "";
+        selectCleanupMode(
+          "remove-all",
+          document.getElementById("ri-remove-all"),
+        );
+        document.querySelector(
+          "input[name=cleanup-mode][value=remove-all]",
+        ).checked = true;
       }
 
       function resetAll() {
