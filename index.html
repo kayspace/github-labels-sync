@@ -334,6 +334,86 @@
         text-decoration: underline;
       }
 
+      /* MULTI-TARGET */
+      .target-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .target-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        animation: fadeUp 0.2s ease both;
+      }
+      .target-row input {
+        flex: 1;
+      }
+      .target-index {
+        font-size: 11px;
+        color: var(--text-dim);
+        width: 18px;
+        flex-shrink: 0;
+        text-align: right;
+        letter-spacing: 0.04em;
+      }
+      .btn-remove-target {
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        color: var(--text-dim);
+        font-family: var(--mono);
+        font-size: 13px;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition:
+          border-color 0.15s,
+          color 0.15s;
+        line-height: 1;
+      }
+      .btn-remove-target:hover {
+        border-color: var(--red);
+        color: var(--red);
+      }
+      .btn-add-target {
+        background: transparent;
+        border: 1px dashed var(--border);
+        border-radius: 6px;
+        color: var(--text-muted);
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 7px 14px;
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          color 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+        letter-spacing: 0.03em;
+      }
+      .btn-add-target:hover {
+        border-color: var(--border-hover);
+        color: var(--text);
+      }
+      .target-count-badge {
+        margin-left: auto;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 100px;
+        font-size: 10px;
+        color: var(--text-muted);
+        padding: 1px 7px;
+        letter-spacing: 0.04em;
+      }
+
       /* RADIO CONFLICT */
       .radio-group {
         display: flex;
@@ -541,6 +621,53 @@
         box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
       }
 
+      /* PER-REPO PROGRESS */
+      .repo-progress-list {
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .repo-progress-item {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 10px 12px;
+      }
+      .repo-progress-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+      }
+      .repo-progress-name {
+        font-size: 12px;
+        color: var(--text);
+      }
+      .repo-progress-state {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+      .repo-progress-state.done {
+        color: var(--green);
+      }
+      .repo-progress-state.error {
+        color: var(--red);
+      }
+      .repo-mini-track {
+        height: 2px;
+        background: var(--border);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .repo-mini-fill {
+        height: 100%;
+        background: var(--green);
+        width: 0%;
+        transition: width 0.2s ease;
+        border-radius: 2px;
+      }
+
       /* STATS */
       .stats-grid {
         display: grid;
@@ -620,6 +747,14 @@
       .log-ts {
         color: var(--text-dim);
         flex-shrink: 0;
+      }
+      .log-repo {
+        color: var(--blue);
+        flex-shrink: 0;
+        max-width: 160px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .log-tag {
         width: 60px;
@@ -941,18 +1076,13 @@
           <span class="card-title">Repositories</span>
         </div>
         <div class="card-body">
+          <!-- SOURCE -->
           <div class="field">
-            <div class="field-row">
-              <div>
-                <label class="field-label" for="src">Source repo</label>
-                <input type="text" id="src" placeholder="owner/repository" />
-              </div>
-              <div>
-                <label class="field-label" for="dst">Target repo</label>
-                <input type="text" id="dst" placeholder="owner/repository" />
-              </div>
-            </div>
+            <label class="field-label" for="src">Source repo</label>
+            <input type="text" id="src" placeholder="owner/repository" />
           </div>
+
+          <!-- PREVIEW -->
           <div class="field">
             <div class="preview-bar">
               <button class="btn-ghost-sm" onclick="previewLabels()">
@@ -965,6 +1095,32 @@
                 >labels will appear here after preview</span
               >
             </div>
+          </div>
+
+          <!-- TARGETS -->
+          <div class="field" style="margin-top: 1.25rem">
+            <div style="display: flex; align-items: center; margin-bottom: 8px">
+              <label class="field-label" style="margin-bottom: 0">
+                Target repos
+              </label>
+              <span class="target-count-badge" id="target-count-badge"
+                >1 target</span
+              >
+            </div>
+            <div class="target-list" id="target-list"></div>
+            <button class="btn-add-target" onclick="addTarget()">
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 12 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path d="M6 1v10M1 6h10" />
+              </svg>
+              add another target
+            </button>
           </div>
         </div>
       </div>
@@ -1039,6 +1195,7 @@
         <div class="progress-track">
           <div class="progress-fill" id="progress-fill"></div>
         </div>
+        <div class="repo-progress-list" id="repo-progress-list"></div>
       </div>
 
       <!-- STATS -->
@@ -1144,12 +1301,63 @@
         </a>
       </span>
 
-      <span class="footer-link">
-        thank u for using!
-      </span>
+      <span class="footer-link"> thank u for using! </span>
     </footer>
 
     <script>
+      // ---- TARGET MANAGEMENT ----
+      let targetCount = 0;
+
+      function addTarget(value = "") {
+        targetCount++;
+        const list = document.getElementById("target-list");
+        const idx = list.children.length + 1;
+        const row = document.createElement("div");
+        row.className = "target-row";
+        row.dataset.id = targetCount;
+        row.innerHTML = `
+          <span class="target-index">${String(idx).padStart(2, "0")}</span>
+          <input type="text" placeholder="owner/repository" value="${value}" />
+          <button class="btn-remove-target" onclick="removeTarget(this)" title="Remove">&times;</button>
+        `;
+        list.appendChild(row);
+        updateTargetCount();
+        row.querySelector("input").focus();
+      }
+
+      function removeTarget(btn) {
+        const row = btn.closest(".target-row");
+        row.remove();
+        renumberTargets();
+        updateTargetCount();
+      }
+
+      function renumberTargets() {
+        const rows = document.querySelectorAll(".target-row");
+        rows.forEach((r, i) => {
+          r.querySelector(".target-index").textContent = String(i + 1).padStart(
+            2,
+            "0",
+          );
+        });
+      }
+
+      function updateTargetCount() {
+        const n = document.querySelectorAll(".target-row").length;
+        const badge = document.getElementById("target-count-badge");
+        badge.textContent = n === 1 ? "1 target" : `${n} targets`;
+      }
+
+      function getTargets() {
+        return Array.from(document.querySelectorAll(".target-row input"))
+          .map((i) => i.value.trim())
+          .filter((v) => v.length > 0);
+      }
+
+      // Initialize with one target row
+      addTarget();
+
+      // ---- TOKEN ----
       function toggleToken() {
         const inp = document.getElementById("pat");
         const btn = document.getElementById("token-vis-btn");
@@ -1175,9 +1383,6 @@
       function getSrc() {
         return document.getElementById("src").value.trim();
       }
-      function getDst() {
-        return document.getElementById("dst").value.trim();
-      }
       function getConflict() {
         return document.querySelector("input[name=conflict]:checked").value;
       }
@@ -1187,13 +1392,16 @@
         return d.toTimeString().slice(0, 8);
       }
 
-      function addLog(msg, type = "info") {
+      function addLog(msg, type = "info", repo = null) {
         const wrap = document.getElementById("log-wrap");
         const scroll = document.getElementById("log-scroll");
         wrap.classList.add("visible");
         const line = document.createElement("div");
         line.className = "log-line";
-        line.innerHTML = `<span class="log-ts">${timestamp()}</span><span class="log-tag ${type}">${type}</span><span class="log-msg">${msg}</span>`;
+        const repoSpan = repo
+          ? `<span class="log-repo">${repo}</span>`
+          : `<span class="log-repo" style="color:var(--text-dim)">global</span>`;
+        line.innerHTML = `<span class="log-ts">${timestamp()}</span>${repoSpan}<span class="log-tag ${type}">${type}</span><span class="log-msg">${msg}</span>`;
         scroll.appendChild(line);
         scroll.scrollTop = scroll.scrollHeight;
       }
@@ -1203,7 +1411,7 @@
         document.getElementById("log-wrap").classList.remove("visible");
       }
 
-      function setProgress(pct, label) {
+      function setOverallProgress(pct, label) {
         document.getElementById("progress-fill").style.width = pct + "%";
         document.getElementById("progress-pct").textContent =
           Math.round(pct) + "%";
@@ -1287,11 +1495,121 @@
         }
       }
 
+      // ---- SYNC A SINGLE TARGET REPO ----
+      async function syncRepo(dst, srcLabels, token, conflict, repoEl) {
+        const fillEl = repoEl.querySelector(".repo-mini-fill");
+        const stateEl = repoEl.querySelector(".repo-progress-state");
+
+        const setRepoProgress = (pct) => {
+          fillEl.style.width = pct + "%";
+        };
+
+        stateEl.textContent = "fetching existing...";
+        addLog(`Fetching existing labels from ${dst}`, "info", dst);
+
+        let dstLabels;
+        try {
+          dstLabels = await fetchAllLabels(dst, token);
+        } catch (e) {
+          stateEl.textContent = `fetch failed: ${e.message}`;
+          stateEl.className = "repo-progress-state error";
+          addLog(`Failed to fetch labels: ${e.message}`, "error", dst);
+          return {
+            created: 0,
+            skipped: 0,
+            overwritten: 0,
+            errors: srcLabels.length,
+          };
+        }
+
+        const dstMap = new Map(dstLabels.map((l) => [l.name.toLowerCase(), l]));
+        addLog(`Target has ${dstLabels.length} existing label(s)`, "info", dst);
+
+        let created = 0,
+          skipped = 0,
+          overwritten = 0,
+          errors = 0;
+        const total = srcLabels.length;
+
+        stateEl.textContent = "syncing...";
+
+        for (let i = 0; i < total; i++) {
+          const l = srcLabels[i];
+          setRepoProgress(Math.round(((i + 1) / total) * 100));
+
+          const exists = dstMap.has(l.name.toLowerCase());
+          if (exists && conflict === "skip") {
+            addLog(`${l.name}`, "skip", dst);
+            skipped++;
+            continue;
+          }
+          const body = JSON.stringify({
+            name: l.name,
+            color: l.color,
+            description: l.description || "",
+          });
+          try {
+            if (exists && conflict === "overwrite") {
+              const existing = dstMap.get(l.name.toLowerCase());
+              const r = await fetch(
+                `https://api.github.com/repos/${dst}/labels/${encodeURIComponent(existing.name)}`,
+                {
+                  method: "PATCH",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: "application/vnd.github+json",
+                    "Content-Type": "application/json",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                  },
+                  body,
+                },
+              );
+              if (!r.ok)
+                throw new Error(
+                  (await r.json().catch(() => ({}))).message || r.statusText,
+                );
+              addLog(`${l.name}`, "overwrite", dst);
+              overwritten++;
+            } else {
+              const r = await fetch(
+                `https://api.github.com/repos/${dst}/labels`,
+                {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: "application/vnd.github+json",
+                    "Content-Type": "application/json",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                  },
+                  body,
+                },
+              );
+              if (!r.ok)
+                throw new Error(
+                  (await r.json().catch(() => ({}))).message || r.statusText,
+                );
+              addLog(`${l.name}`, "ok", dst);
+              created++;
+            }
+          } catch (e) {
+            addLog(`${l.name}: ${e.message}`, "error", dst);
+            errors++;
+          }
+          await new Promise((r) => setTimeout(r, 80));
+        }
+
+        setRepoProgress(100);
+        stateEl.textContent = `done - ${created} created, ${skipped} skipped, ${overwritten} updated, ${errors} errors`;
+        stateEl.className = "repo-progress-state done";
+        return { created, skipped, overwritten, errors };
+      }
+
+      // ---- MAIN SYNC ----
       async function runSync() {
         const token = getToken(),
           src = getSrc(),
-          dst = getDst(),
           conflict = getConflict();
+        const targets = getTargets();
         const runStatus = document.getElementById("run-status");
 
         if (!token) {
@@ -1302,123 +1620,95 @@
           runStatus.textContent = "invalid source (use owner/repo)";
           return;
         }
-        if (!dst || !dst.includes("/")) {
-          runStatus.textContent = "invalid target (use owner/repo)";
-          return;
-        }
-        if (src === dst) {
-          runStatus.textContent = "source and target must differ";
+        if (targets.length === 0) {
+          runStatus.textContent = "add at least one target repo";
           return;
         }
 
+        const invalidTarget = targets.find((t) => !t.includes("/"));
+        if (invalidTarget) {
+          runStatus.textContent = `invalid target: ${invalidTarget} (use owner/repo)`;
+          return;
+        }
+        if (targets.includes(src)) {
+          runStatus.textContent = "source cannot also be a target";
+          return;
+        }
+
+        // Reset UI
         document.getElementById("log-scroll").innerHTML = "";
         document.getElementById("log-wrap").classList.remove("visible");
         document.getElementById("stats-grid").classList.remove("visible");
         document.getElementById("progress-wrap").classList.add("visible");
         document.getElementById("btn-run").disabled = true;
         runStatus.textContent = "running...";
-        setProgress(0, "Fetching source labels...");
+        setOverallProgress(0, "Fetching source labels...");
 
-        let created = 0,
-          skipped = 0,
-          overwritten = 0,
-          errors = 0;
+        // Build per-repo progress items
+        const repoProgressList = document.getElementById("repo-progress-list");
+        repoProgressList.innerHTML = "";
+        const repoEls = {};
+        targets.forEach((dst) => {
+          const el = document.createElement("div");
+          el.className = "repo-progress-item";
+          el.innerHTML = `
+            <div class="repo-progress-header">
+              <span class="repo-progress-name">${dst}</span>
+              <span class="repo-progress-state">waiting...</span>
+            </div>
+            <div class="repo-mini-track"><div class="repo-mini-fill"></div></div>
+          `;
+          repoProgressList.appendChild(el);
+          repoEls[dst] = el;
+        });
 
+        let srcLabels;
         try {
-          addLog(`Fetching labels from ${src}`, "info");
-          const srcLabels = await fetchAllLabels(src, token);
-          addLog(`Found ${srcLabels.length} label(s) in source`, "info");
-
-          setProgress(5, "Fetching target labels...");
-          addLog(`Fetching existing labels from ${dst}`, "info");
-          const dstLabels = await fetchAllLabels(dst, token);
-          const dstMap = new Map(
-            dstLabels.map((l) => [l.name.toLowerCase(), l]),
-          );
-          addLog(`Target has ${dstLabels.length} existing label(s)`, "info");
-
-          const total = srcLabels.length;
-          for (let i = 0; i < total; i++) {
-            const l = srcLabels[i];
-            const pct = 5 + Math.round(((i + 1) / total) * 95);
-            setProgress(pct, `Processing ${i + 1} of ${total}`);
-
-            const exists = dstMap.has(l.name.toLowerCase());
-            if (exists && conflict === "skip") {
-              addLog(`${l.name}`, "skip");
-              skipped++;
-              continue;
-            }
-            const body = JSON.stringify({
-              name: l.name,
-              color: l.color,
-              description: l.description || "",
-            });
-            try {
-              if (exists && conflict === "overwrite") {
-                const existing = dstMap.get(l.name.toLowerCase());
-                const r = await fetch(
-                  `https://api.github.com/repos/${dst}/labels/${encodeURIComponent(existing.name)}`,
-                  {
-                    method: "PATCH",
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                      Accept: "application/vnd.github+json",
-                      "Content-Type": "application/json",
-                      "X-GitHub-Api-Version": "2022-11-28",
-                    },
-                    body,
-                  },
-                );
-                if (!r.ok)
-                  throw new Error(
-                    (await r.json().catch(() => ({}))).message || r.statusText,
-                  );
-                addLog(`${l.name}`, "overwrite");
-                overwritten++;
-              } else {
-                const r = await fetch(
-                  `https://api.github.com/repos/${dst}/labels`,
-                  {
-                    method: "POST",
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                      Accept: "application/vnd.github+json",
-                      "Content-Type": "application/json",
-                      "X-GitHub-Api-Version": "2022-11-28",
-                    },
-                    body,
-                  },
-                );
-                if (!r.ok)
-                  throw new Error(
-                    (await r.json().catch(() => ({}))).message || r.statusText,
-                  );
-                addLog(`${l.name}`, "ok");
-                created++;
-              }
-            } catch (e) {
-              addLog(`${l.name}: ${e.message}`, "error");
-              errors++;
-            }
-            await new Promise((r) => setTimeout(r, 80));
-          }
+          addLog(`Fetching labels from ${src}`, "info", null);
+          srcLabels = await fetchAllLabels(src, token);
+          addLog(`Found ${srcLabels.length} label(s) in source`, "info", null);
         } catch (e) {
-          addLog(`Fatal error: ${e.message}`, "error");
+          addLog(`Fatal error fetching source: ${e.message}`, "error", null);
+          document.getElementById("btn-run").disabled = false;
+          runStatus.textContent = "failed to fetch source labels";
+          return;
         }
 
-        document.getElementById("s-created").textContent = created;
-        document.getElementById("s-skipped").textContent = skipped;
-        document.getElementById("s-overwritten").textContent = overwritten;
-        document.getElementById("s-errors").textContent = errors;
+        setOverallProgress(
+          10,
+          `Syncing ${targets.length} repo${targets.length > 1 ? "s" : ""} in parallel...`,
+        );
+
+        // Run all targets in parallel
+        const results = await Promise.all(
+          targets.map((dst) =>
+            syncRepo(dst, srcLabels, token, conflict, repoEls[dst]),
+          ),
+        );
+
+        const totals = results.reduce(
+          (acc, r) => ({
+            created: acc.created + r.created,
+            skipped: acc.skipped + r.skipped,
+            overwritten: acc.overwritten + r.overwritten,
+            errors: acc.errors + r.errors,
+          }),
+          { created: 0, skipped: 0, overwritten: 0, errors: 0 },
+        );
+
+        document.getElementById("s-created").textContent = totals.created;
+        document.getElementById("s-skipped").textContent = totals.skipped;
+        document.getElementById("s-overwritten").textContent =
+          totals.overwritten;
+        document.getElementById("s-errors").textContent = totals.errors;
         document.getElementById("stats-grid").classList.add("visible");
         document.getElementById("btn-run").disabled = false;
-        setProgress(100, "Complete");
-        runStatus.textContent = `done — ${created} created, ${skipped} skipped, ${overwritten} updated, ${errors} errors`;
+        setOverallProgress(100, "Complete");
+        runStatus.textContent = `done across ${targets.length} repo${targets.length > 1 ? "s" : ""} - ${totals.created} created, ${totals.skipped} skipped, ${totals.overwritten} updated, ${totals.errors} errors`;
       }
 
       function resetAll() {
-        ["pat", "src", "dst"].forEach(
+        ["pat", "src"].forEach(
           (id) => (document.getElementById(id).value = ""),
         );
         document.getElementById("pat").type = "password";
@@ -1431,9 +1721,14 @@
         document.getElementById("log-wrap").classList.remove("visible");
         document.getElementById("stats-grid").classList.remove("visible");
         document.getElementById("progress-wrap").classList.remove("visible");
-        document.getElementById("c-skip").checked = true;
-        selectConflict("skip", document.getElementById("ri-skip"));
+        document.getElementById("repo-progress-list").innerHTML = "";
         document.getElementById("progress-fill").style.width = "0%";
+        document.getElementById("target-list").innerHTML = "";
+        targetCount = 0;
+        addTarget();
+        selectConflict("skip", document.getElementById("ri-skip"));
+        document.querySelector("input[name=conflict][value=skip]").checked =
+          true;
       }
 
       async function loadVersion() {
