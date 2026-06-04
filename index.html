@@ -1357,6 +1357,25 @@
       // Initialize with one target row
       addTarget();
 
+      // ---- LOCALSTORAGE (PAT PERSISTENCE) ----
+      const PAT_STORAGE_KEY = "github-labels-sync-pat";
+
+      function savePAT(token) {
+        if (token.trim()) {
+          localStorage.setItem(PAT_STORAGE_KEY, token);
+        } else {
+          localStorage.removeItem(PAT_STORAGE_KEY);
+        }
+      }
+
+      function loadPAT() {
+        return localStorage.getItem(PAT_STORAGE_KEY) || "";
+      }
+
+      function clearPAT() {
+        localStorage.removeItem(PAT_STORAGE_KEY);
+      }
+
       // ---- TOKEN ----
       function toggleToken() {
         const inp = document.getElementById("pat");
@@ -1385,6 +1404,27 @@
       }
       function getConflict() {
         return document.querySelector("input[name=conflict]:checked").value;
+      }
+
+      // Load PAT from localStorage on page load
+      function initializePAT() {
+        const savedPAT = loadPAT();
+        if (savedPAT) {
+          document.getElementById("pat").value = savedPAT;
+        }
+      }
+
+      // Auto-save PAT when user enters it
+      function setupPATAutoSave() {
+        const patInput = document.getElementById("pat");
+        if (patInput) {
+          patInput.addEventListener("change", function () {
+            savePAT(this.value);
+          });
+          patInput.addEventListener("blur", function () {
+            savePAT(this.value);
+          });
+        }
       }
 
       function timestamp() {
@@ -1708,9 +1748,8 @@
       }
 
       function resetAll() {
-        ["pat", "src"].forEach(
-          (id) => (document.getElementById(id).value = ""),
-        );
+        // Only clear source repo, NOT the PAT (it persists via localStorage)
+        document.getElementById("src").value = "";
         document.getElementById("pat").type = "password";
         document.getElementById("token-vis-btn").textContent = "show";
         document.getElementById("label-chips").innerHTML =
@@ -1749,6 +1788,8 @@
       }
 
       loadVersion();
+      initializePAT();
+      setupPATAutoSave();
     </script>
   </body>
 </html>
